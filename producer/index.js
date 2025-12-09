@@ -1,6 +1,10 @@
-import { StreamrClient } from '@streamr/sdk'
+// producer/index.js
 import { loadConfig } from './src/config.js'
-import { createLogger } from './src/logger.js'
+import {
+    createLogger,
+    createStreamrClient,
+    setupGracefulShutdown,
+} from '@livepeer-streamr/shared'
 import { startWebSocketStreamServer } from './src/server.js'
 
 async function main() {
@@ -12,11 +16,7 @@ async function main() {
         'Starting Streamr WebSocket bridge',
     )
 
-    const streamrClient = new StreamrClient({
-        auth: {
-            privateKey: config.privateKey,
-        },
-    })
+    const streamrClient = createStreamrClient(config.privateKey)
 
     const { stop } = await startWebSocketStreamServer({
         streamrClient,
@@ -25,46 +25,25 @@ async function main() {
         port: config.port,
     })
 
-    let shuttingDown = false
-
-    const shutdown = async (signal, exitCode = 0) => {
-        if (shuttingDown) {
-            return
-        }
-        shuttingDown = true
-
-        logger.info({ signal }, 'Shutting down Streamr WebSocket bridge')
-
-        try {
-            await stop()
-        } catch (error) {
-            logger.error({ err: error }, 'Error while stopping WebSocket server')
-        }
-
-        try {
-            if (typeof streamrClient.destroy === 'function') {
-                await streamrClient.destroy()
-                logger.info('Streamr producer destroyed')
+    setupGracefulShutdown({
+        logger,
+        name: 'Streamr WebSocket bridge',
+        cleanup: async () => {
+            try {
+                await stop()
+            } catch (error) {
+                logger.error({ err: error }, 'Error while stopping WebSocket server')
             }
-        } catch (error) {
-            logger.error({ err: error }, 'Error while destroying Streamr producer')
-        }
 
-        logger.info('Shutdown complete')
-        process.exit(exitCode)
-    }
-
-    process.on('SIGINT', () => shutdown('SIGINT'))
-    process.on('SIGTERM', () => shutdown('SIGTERM'))
-
-    process.on('uncaughtException', (error) => {
-        logger.fatal({ err: error }, 'Uncaught exception')
-        shutdown('uncaughtException', 1)
-    })
-
-    process.on('unhandledRejection', (reason) => {
-        logger.fatal({ err: reason }, 'Unhandled promise rejection')
-        shutdown('unhandledRejection', 1)
+            try {
+                if (typeof streamrClient.destroy === 'function') {
+                    await streamrClient.destroy()
+                    logger.info('Streamr producer destroyed')
+                }
+            } catch (error) {
+                logger.error({ err: error }, 'Error while destroying Streamr producer')
+            }
+        },
     })
 }
 

@@ -1,0 +1,20 @@
+{
+  "name": "@livepeer-streamr/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities for Livepeer Streamr producer/consumer apps",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./logger": "./src/logger.js",
+    "./config": "./src/config.js",
+    "./streamr": "./src/streamr.js",
+    "./shutdown": "./src/shutdown.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@streamr/sdk": "^103.1.2",
+    "dotenv": "^17.2.3",
+    "pino": "^9.0.0"
+  }
+}

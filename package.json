@@ -1,0 +1,12 @@
+{
+  "name": "livepeer-streamr-monorepo",
+  "private": true,
+  "workspaces": [
+    "producer",
+    "consumer",
+    "packages/shared"
+  ],
+  "devDependencies": {
+    "vitest": "^1.6.0"
+  }
+}
