@@ -1,0 +1,23 @@
+{
+  "name": "livepeer-streamr-producer",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@streamr/sdk": "^103.1.2",
+    "dotenv": "^17.2.3",
+    "pino": "^9.0.0",
+    "ws": "^8.17.0"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0"
+  }
+}

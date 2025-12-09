@@ -1,0 +1,13 @@
+version: '3.9'
+
+services:
+  streamr-client:
+    build:
+      context: producer
+    env_file:
+      - producer/.env
+    environment:
+      WEBSOCKET_PORT: ${WEBSOCKET_PORT:-8080}
+    ports:
+      - "${WEBSOCKET_PORT:-8080}:${WEBSOCKET_PORT:-8080}"
+    restart: unless-stopped
