@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: streamr-postgres
+    environment:
+      POSTGRES_DB: streamr
+      POSTGRES_USER: streamr
+      POSTGRES_PASSWORD: streamr
+    ports:
+      - "6432:5432"
+    volumes:
+      - livepeer_streamr_integration_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d streamr -U streamr"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  producer:
+    image: tztcloud/livepeer-streamr-producer:latest
+    container_name: streamr-producer
+    environment:
+      STREAMR_PRIVATE_KEY: ${STREAMR_PRIVATE_KEY}
+      STREAMR_STREAM_ID: ${STREAMR_STREAM_ID}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      WEBSOCKET_PORT: ${WEBSOCKET_PORT:-8080}
+    ports:
+      - "${WEBSOCKET_PORT:-8080}:${WEBSOCKET_PORT:-8080}"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  consumer:
+    image: tztcloud/livepeer-streamr-consumer:latest
+    container_name: streamr-consumer
+    environment:
+      STREAMR_PRIVATE_KEY: ${STREAMR_PRIVATE_KEY}
+      STREAMR_STREAM_ID: ${STREAMR_STREAM_ID}
+
+      # Postgres connection
+      DATABASE_URL: postgres://streamr:streamr@db:5432/streamr
+
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  livepeer_streamr_integration_postgres_data:
+    external: true
